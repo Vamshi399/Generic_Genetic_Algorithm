@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Generic Algorithm Example</title>
+</head>
+<h1>Ejemplo de uso de genericAlgorithm.js</h1>
+<h2>El objetivo de la simulacion es maximizar el numero de genes "1" en el cromosoma</h2>
+<section>
+    <div id="configuracion">
+        <ul>
+            <li>Tamaño del cromosoma: 30</li>
+            <li>Tamaño de la poblacion: 50</li>
+            <li>Elementos repetidos: True</li>
+            <li>Porcentaje de mutacion: 2</li>
+            <li>Porcentaje de cruces: 75</li>
+            <li>Genes: ["A","C","1"]</li>
+        </ul>
+    </div>
+    <div>
+        <p>Mejor elemento tras una simulacion de 50 generaciones: </p>
+        <div id="result1"></div>
+        <p>Mejor elemento tras una simulacion de 100 generaciones: </p>
+        <div id="result2"></div>
+        <p>Mejor elemento tras una simulacion de 200 generaciones: </p>
+        <div id="result3"></div>
+    </div>
+</section>
+
+<body>
+    <script src="js/geneticAlgorithm.min.js"></script>
+    <script src="js/configuration.json"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: geneticAlgorithmSpanish.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: geneticAlgorithmSpanish.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @fileOverview Script para facilitar la creación y reutilización sencilla y generica de algoritmos genéticos, permitiendo utilizar una configuración estandar o funciones propias creadas por el usuario
+ * @author Rafael Castillo Alcaraz
+ **/
+
+/**
+ * @class Define la el modelo de un elemento para ser utilizado en un algoritmo genetico.
+ *
+ * @property {number} id - Un valor que identifica al elemento.
+ * @property {string[]} chromosome - Una serie de cadenas de texto, representando cada una de ellas un gen, y el array completo un cromosoma.
+ * @property {number} fitness - Un valor que indica la calidad de ese cromosoma para resolver el problema del que forma parte.
+ * @this {Element}
+ *
+ **/
+
+function Element(id, chromosome, fitness) {
+    /** @lends Element# */
+
+    /**
+     * Un valor que identifica al elemento.
+     *
+     * @private
+     * @name Element#id
+     * @type number
+     */
+    this.id = id;
+
+    /**
+     * Una serie de cadenas de texto, representando cada una de ellas un gen, y el array completo un cromosoma.
+     *
+     * @private
+     * @name Element#chromosome
+     * @type string[]
+     */
+    this.chromosome = chromosome;
+
+    /**
+     * Un valor que indica la calidad de ese cromosoma para resolver el problema del que forma parte.
+     *
+     * @private
+     * @name Element#fitness
+     * @type number
+     */
+    this.fitness = fitness;
+
+    /**
+     * Un valor que define cual es la probabilidad para que el elemento sea elegido por una funcion de seleccion.
+     *
+     * @private
+     * @name Element#probability
+     * @type number
+     */
+    this.probability = 0;
+
+    /*************************** Getters &amp; Setters **************************/
+
+    /**
+     * @function Element#getId
+     *
+     * @return {number} - Devuelve el id del elemento actual.
+     */
+    this.getId = function () {
+        return this.id;
+    }
+
+    /**
+     * @function Element#getChromosome
+     *
+     * @return {string[]} - Devuelve una copia del cromosoma del elemento actual.
+     */
+    this.getChromosome = function () {
+        return this.chromosome.slice();
+    }
+
+    /**
+     * @function Element#getFitness
+     *
+     * @return {number} - Devuelve el fitness del elemento actual.
+     */
+    this.getFitness = function () {
+        return this.fitness;
+    }
+
+    /**
+     * @function Element#getProbability
+     *
+     * @return {number} - Devuelve la probabilidad del elemento actual.
+     */
+    this.getProbability = function () {
+        return this.probability;
+    }
+
+    /**
+     * @function Element#setId
+     * @description Establece la id del elemento actual.
+     *
+     * @param {number} id - Un valor que identifica al elemento.
+     */
+    this.setId = function (id) {
+        this.id = id;
+    }
+
+    /**
+     * @function Element#setChromosome
+     * @description Establece como cromosoma actual, una copia del valor introducido como parametro.
+     *
+     * @param {string[]} chromosome - Una serie de cadenas de texto, representando cada una de ellas un gen, y el array completo un cromosoma.
+     */
+    this.setChromosome = function (chromosome) {
+        this.chromosome = chromosome.slice();
+    }
+
+    /**
+     * @function Element#setFitness
+     * @description Establece el fitness del elemento actual.
+     *
+     * @param {number} fitness - Un valor que indica la calidad de ese cromosoma para resolver el problema del que forma parte.
+     */
+    this.setFitness = function (fitness) {
+        this.fitness = fitness;
+    }
+
+    /**
+     * @function Element#setProbability
+     * @description Establece la probabilidad del elemento actual.
+     *
+     * @param {number} probability - Un valor que define cual es la probabilidad para que el elemento sea elegido por una funcion de seleccion.
+     */
+    this.setProbability = function (probability) {
+        this.probability = probability;
+    }
+
+    /********************************* Utils *********************************/
+
+    /**
+     * @function Element#setGen
+     * @description Sustituye un gen del cromosoma del elemento actual en la posicion indicada por el gen introducido como parametro.
+     *
+     * @param {number} position - Posicion del gen que se quiere sustituir dentro del cromosoma.
+     * @param {string} gen - La cadena de texto que identifica el tipo de gen.
+     */
+    this.setGen = function (position, gen) {
+        this.chromosome[position] = gen.slice();
+    }
+
+    /**
+     * @function Element#getGen
+     * @description Devuelve una copia del gen que se encuentra dentro del cromosoma en la posicion indicada como parametro.
+     *
+     * @param {number} position - Posicion del gen que se quiere recuperar.
+     */
+    this.getGen = function (position) {
+        return this.chromosome[position].slice();
+    }
+
+    /**
+     * @function Element#write
+     * @description Funcion que devuelve un string con los valores del cromosoma en un formato legible.
+     *
+     * @return {string} - Una cadena de texto con los valores de id, cromosoma, fitness y probabilidad separados por tabulaciones.
+     */
+    this.write = function () {
+        var result = "";
+        result += "Id: " + this.id;
+        result += "\tChromosome: ";
+        for (var i = 0; i &lt; this.chromosome.length; i++) {
+            result += this.chromosome[i] + " ";
+        }
+        result += "\tFitness: " + this.fitness;
+        result += "\tProbability: " + Math.round(this.probability * 100) / 100;
+        return result;
+    }
+
+};
+
+/**
+ * @class Representa una coleccion de diferentes funciones para ser usadas por un algoritmo genetico.
+ *
+ * @this {Functions}
+ **/
+
+function Functions() {
+
+    /** @lends Functions# */
+
+    that = this;
+
+    /**
+     * @function Functions#initialization
+     * @description Crea una nueva poblacion.
+     *
+     * @param {number} size - numero de elementos de la poblacion creada.
+     * @param {number} chromosomeSize - longitud del cromosoma de cada elemento.
+     * @param {string[]} genes - la lista de posibles genes a ser utilizados por el algoritmo.
+     * @param {boolean} repeated - true si un cromosoma puede contener elementos repetidos.
+     * @return {Element[]} population - devuelve un array con los elementos creados.
+     */
+
+    this.initialization = function (size, chromosomeSize, genes, repeated) {
+
+        var population = [];
+        var auxChromosome = [];
+
+        // Si se permiten genes repetidos dentro del cromosoma
+        if (repeated) {
+            for (var i = 0; i &lt; size; i++) {
+                for (var j = 0; j &lt; chromosomeSize; j++) {
+                    // Cada elemento del cromosoma es un gen elegido aleatoriamente de la lista de genes
+                    auxChromosome[j] = genes[Math.floor(Math.random() * genes.length)];
+                }
+                population[i] = new Element(i, auxChromosome.slice(), 0);
+            }
+        }
+        // Si no se permiten genes repetidos dentro del cromosoma
+        else {
+            if (genes.length >= chromosomeSize) {
+                for (var i = 0; i &lt; size; i++) {
+                    auxGenes = genes.slice();
+                    for (var j = 0; j &lt; chromosomeSize; j++) {
+                        var rand = Math.floor(Math.random() * auxGenes.length);
+                        // Cada elemento del cromosoma es un gen elegido aleatoriamente de la lista de genes
+                        auxChromosome[j] = auxGenes[rand];
+                        // Se elimina el elemento ya introducido de la lista de posibles genes
+                        auxGenes.splice(rand, 1);
+                    }
+                    population[i] = new Element(i, auxChromosome.slice(), 0);
+                }
+            } else {
+                console.log("No hay suficientes genes diferentes para que no se repeitan en un cromosoma, dado el tamaño del cromosoma");
+            }
+        }
+        return population;
+    }
+
+    /**
+     * @function Functions#isValid
+     * @description Analiza un cromosoma y decide si es valido o no.
+     *
+     * @param {string[]} chromosome - Un array en el que cada elemento es un string que representa un gen
+     * @return {boolean} - Devuelve true siempre. Utilizando esta funcion no existen elementos no validos.
+     */
+    this.isValid = function (chromosome) {
+        return true;
+    }
+
+    /**
+     * @function Functions#fitnessFunction
+     * @description Dado un elemento calcula y devuelve su valor de fitness. El valor de fitness será igual al numero de 1s que contenga el cromosoma.
+     *
+     * @param {Element} element - El elemento del que se quiere calcular su valor de fitness.
+     * @return {number} - Devuelve el valor de fitness.
+     */
+    this.fitnessFunction = function (element) {
+        var fitness = 0;
+        for (var i = 0; i &lt; element.getChromosome().length; i++) {
+            if (element.getChromosome()[i].localeCompare("1") == 0) {
+                fitness++;
+            }
+        }
+        return fitness;
+    }
+
+    /**
+     * @function Functions#evaluate
+     * @description Asigna su valor de fitness a cada elemento de la poblacion utilizando la funcion de fitness.
+     *
+     * @param {Element[]} population - Un conjunto de elementos de los que se quiere calcular su valor de fitness.
+     * @return {Element[]} - Devuelve una copia de @population tras calcular los valores de fitness de cada elemento.
+     */
+    this.evaluate = function (population) {
+        var populationFitness = [];
+        populationFitness = clonePopulation(population);
+        for (var i = 0; i &lt; populationFitness.length; i++) {
+            populationFitness[i].setFitness(this.fitnessFunction(populationFitness[i]));
+        }
+        return populationFitness;
+    }
+
+    /**
+     * @function Functions#rouletteWheelSelection
+     * @description Simula el proceso de seleccion de ruleta (también llamado seleccion proporcional a la función de fitness). Permite que los mejores individuos sean elegidos con mayor probabilidad, pero deja abierta también la posibilidad de que los pequeños sean elegidos. 
+     *
+     * @population {Element[]} population - Un conjunto de elementos de tipo element del que se quieren elegir padres para la siguiente. generacion.
+     * @return {Element[]} - Devuelve un conjunto del mismo tamaño que @population formado por los padres elegidos.
+     */
+
+    this.rouletteWheelSelection = function (population) {
+        var probPopulation = [];
+        var parents = [];
+        probPopulation = clonePopulation(population);
+        sumFitness = 0;
+        // Calculate probability
+        for (var i = 0; i &lt; probPopulation.length; i++) {
+            sumFitness += probPopulation[i].getFitness();
+        }
+        for (var i = 0; i &lt; probPopulation.length; i++) {
+            probPopulation[i].setProbability(probPopulation[i].getFitness() / sumFitness);
+        }
+
+        // Sort array
+        probPopulation.sort(function (a, b) {
+            return a.getProbability() - b.getProbability();
+        });
+
+        // Make the roulette wheel
+        for (var i = 1; i &lt; probPopulation.length; i++) {
+            probPopulation[i].setProbability(probPopulation[i].getProbability() + probPopulation[i - 1].getProbability());
+        }
+
+        // Turn the roulette wheel
+        for (var i = 0; i &lt; probPopulation.length; i++) {
+            var rand = Math.random();
+            for (var j = 0; j &lt; probPopulation.length; j++) {
+                if (rand &lt;= probPopulation[j].getProbability()) {
+                    parents[i] = new Element(probPopulation[j].getId(), probPopulation[j].getChromosome(), probPopulation[j].getFitness());
+                    break;
+                }
+            }
+        }
+        return parents;
+    }
+
+    /**
+     * @function Functions#crossover
+     * @description Dada una poblacion genera un conjunto de hijos formados tras el apareamiento de sus padres. El apareamiento consiste en coger la primera mitad del cromosoma del primer padre y la segunda mitad del segundo padre para concatenarlos y formar el elemento hijo. Se fija un porcentaje de hijos que serán el resultado de cruces, el resto serán los mejores elementos de la poblacion.
+     *
+     * @param {Element[]} parents - Elementos elegidos para reproducirse tras una funcion de seleccion.
+     * @param {Element[]} population - Conjunto de elementos de tipo Element que forman actualmente la poblacion.
+     * @param {number} percent - Porcentaje de los hijos calculados que serán resultado de cruces.
+     * @return {Element[]} - Debe devolver los hijos resultado del proceso de cruce de una poblacion.
+     */
+    this.crossover = function (parents, population, percent) {
+        var children = [];
+        var auxPopulation = clonePopulation(population);
+        var firstElement = Math.floor(parents.length * (100 - percent) / 100);
+
+        function mating(element1, element2) {
+            var childChromosome = [];
+            var i = 0;
+            // Se insertan la mitad de elementos de element1
+            while (i &lt; element1.getChromosome().length / 2) {
+                childChromosome[i] = element1.getChromosome()[i];
+                i++;
+            }
+            // Se insertan la mitad de elementos de element2
+            while (i &lt; element2.getChromosome().length) {
+                childChromosome[i] = element2.getChromosome()[i];
+                i++;
+            }
+            return childChromosome;
+        }
+
+        // Sort array
+        auxPopulation.sort(function (a, b) {
+            return b.getFitness() - a.getFitness();
+        });
+
+        for (var i = 0; i &lt; firstElement; i++) {
+            children[i] = cloneElement(auxPopulation[i]);
+        }
+
+        for (var i = firstElement; i &lt; parents.length - 1; i++) {
+            children[i] = new Element(i, mating(parents[i], parents[i + 1]), 0);
+        }
+
+        // El ultimo hijo es hijo del último elemento de @padres y del primero
+        children[i] = new Element(i, mating(parents[parents.length - 1], parents[0]), 0);
+
+        return children;
+    }
+
+    /**
+     * @function Functions#mutation
+     * @description Realiza el proceso de mutacion dada una poblacion. Elige elementos en funcion del porcentaje elegido y muta uno de sus genes.
+     *
+     * @param {Element[]} children - Conjunto de elementos para ser mutados.
+     * @param {number} percent - Valor que indica el porcentaje de elementos de @children que sufrirán una mutacion.
+     * @param {string[]} genes - Un array de strings que representan todos los posibles genes que pueden formar parte de un cromosoma.
+     * @return {Element[]} - Devuelve una copia de los elementos de @children tras haber mutado el porcentaje de ellos indicado por @percent.
+     */
+    this.mutation = function (children, percent, genes) {
+        var mutatedChildren = [];
+        mutatedChildren = clonePopulation(children);
+        for (var i = 0; i &lt; mutatedChildren.length; i++) {
+            if (Math.random() &lt; (percent / 100)) {
+                // Se calcula la posicion del gen para mutar
+                var posMutation = Math.round(Math.random() * (mutatedChildren[i].getChromosome().length - 1));
+                do {
+                    // Se asegura que el gen de reemplazo no sea el mismo que el actual
+                    var gen = genes[Math.round(Math.random() * (genes.length - 1))];
+                } while (gen.localeCompare(mutatedChildren[i].getChromosome()[posMutation]) == 0);
+                mutatedChildren[i].setGen(posMutation, gen);
+            }
+        }
+        return mutatedChildren;
+    }
+
+    /**
+     * @function Functions#evolution
+     * @description Sustituye la poblacion actual por una copia de @mutatedChildren.
+     *
+     * @param {Element[]} mutatedChildren - Un conjunto de elementos tras haber sufrido los procesos del algoritmo genetico
+     * @return {Element[]} - Devuelve la poblacion para la siguiente generacion, es decir, una copia de @mutatedChildren
+     */
+    this.evolution = function (mutatedChildren) {
+        var nextPopulation = [];
+        nextPopulation = clonePopulation(mutatedChildren);
+        return nextPopulation;
+    }
+
+    /** Utils **/
+
+    /**
+     * @function Functions#cloneElement
+     * @description Devuelve la copia de un elemento introducido como parametro
+     *
+     * @param {Element} element - Un elemento de tipo Element
+     * @return {Element} - Una copia de @element
+     */
+    function cloneElement(element) {
+        var copy = new Element(element.getId(), element.getChromosome(), element.getFitness());
+        copy.setProbability(element.getProbability());
+        return copy;
+    }
+
+    /**
+     * @function Functions#clonePopulation
+     * @description Devuelve la copia de una poblacion introducida
+     *
+     * @param {Element[]} population - Un conjunto de elementos tras haber sufrido los procesos del algoritmo genetico
+     * @return {Element[]} - Una copia de @population
+     */
+    function clonePopulation(population) {
+        var copy = [];
+        for (var i = 0; i &lt; population.length; i++) {
+            copy[i] = cloneElement(population[i]);
+        }
+        return copy;
+    }
+
+    /**
+     * @function Functions#printPopulation
+     * @description Devuelve un string para poder imprimir una poblacion en formato legible de manera sencilla.
+     *
+     * @param {Element[]} population - Un conjunto de elementos de tipo Element.
+     * @return {Element[]} - Un string que muestra todos los elementos de @population de una manera legible
+     */
+    this.printPopulation = function (population) {
+        var result = "";
+        for (var i = 0; i &lt; population.length; i++) {
+            result += population[i].write() + "\n";
+        }
+        console.log(result);
+    }
+
+}
+
+/**
+ * @class Crea una instancia de un algoritmo genetico
+ *
+ * @this {GeneticAlgorithm}
+ * @configuration {JSON Object} - Parametros de configuracion y funciones que usara el algoritmo, definidos de la siguiente manera:
+ *      {function} isValid - funcion que define si la estructura de un cromosoma es valida.
+ *      {function} fitnessFunction - funcion que devuelve el valor de fitness de un elemento.
+ *      {function} initialization - funcion que inicializa la poblacion creando nuevos elementos
+ *      {function} evaluation - funcion que utiliza la funcion de fitness para evaluar el desempeño de cada elemento.
+ *      {function} selection - funcion que selecciona los elementos para reproducirse en esta generación.
+ *      {function} crossover - funcion que realiza los cruces entre elementos y devuelve los hijos.
+ *      {function} mutation - funcion que recibe elementos y realiza mutaciones.
+ *      {function} evolution - funcion que recibe elementos y decide quienes forman parte de la siguiente generacion.
+ *      {number} popSize - El tamaño de la población.
+ *      {number} chromosomeSize - La longitud de cada cromosoma.
+ *      {string[]} genes - La lista de posibles genes a ser utilizados por el algoritmo.
+ *      {boolean} repeated - true si un cromosoma puede contener elementos repetidos.
+ *      {number} percentMutation - porcentaje de elementos que sufrirán una mutación. 
+ *      {number} percentCrossover - porcentaje de elementos que en la siguiente generacion serán el resultado de cruces.
+ */
+
+function GeneticAlgorithm(configuration) {
+    /** @lends GeneticAlgorithm# */
+
+    /****************************** Atributos ********************************/
+
+    that = this;
+
+    /**
+     * Los elementos de la generacion actual.
+     *
+     * @private
+     * @name GeneticAlgorithm#population
+     * @type Element[]
+     */
+    this.population = [];
+
+    /**
+     * Los elementos resultado del proceso de seleccion.
+     *
+     * @private
+     * @name GeneticAlgorithm#parents
+     * @type Element[]
+     */
+    this.parents = [];
+
+    /**
+     * Los elementos resultado del proceso de croossover y mutation.
+     *
+     * @private
+     * @name GeneticAlgorithm#children
+     * @type Element[]
+     */
+    this.children = [];
+
+    /**
+     * El elemento con mejor valor de fitness de la poblacion actual.
+     *
+     * @private
+     * @name GeneticAlgorithm#best
+     * @type Element[]
+     */
+    this.best = Object;
+
+    /**
+     * El numero de generacion actual.
+     *
+     * @private
+     * @name GeneticAlgorithm#generation
+     * @type number
+     * @default = 0;
+     */
+    this.generation = 0;
+
+    /*********************** Funciones propias del GA ************************/
+
+    /**
+     * @function GeneticAlgorithm#initialization
+     * @description Crea una nueva poblacion.
+     *
+     * @return {Element[]} - Devuelve los elementos creados.
+     */
+    this.initialization = configuration.initialization;
+
+    /**
+     * @function GeneticAlgorithm#isValid
+     * @description Analiza un cromosoma y decide si es valido o no.
+     *
+     * @return {boolean} - Debe devolver true si un cromosoma puede contener elementos repetidos.
+     */
+    this.isValid = configuration.isValid;
+
+    /**
+     * @function GeneticAlgorithm#fitnessFunction
+     * @description Dado un elemento calcula y devuelve su valor de fitness.
+     *
+     * @return {number} - Debe devolver el valor de fitness de un elemento dado.
+     */
+    this.fitnessFunction = configuration.fitnessFunction;
+
+    /**
+     * @function GeneticAlgorithm#evaluate
+     * @description Asigna su valor de fitness a cada elemento de la poblacion utilizando la funcion de fitness.
+     *
+     * @return {Element[]} - Debe devolver una poblacion con valores de fitness asociados.
+     */
+    this.evaluate = configuration.evaluation;
+
+    /**
+     * @function GeneticAlgorithm#selection
+     * @description Utiliza un criterio para seleccionar los elementos que se reproducirán en la generación actual dada una poblacion.
+     *
+     * @return {Element[]} - Debe devolver una poblacion formada por los elementos seleccionados para reproducirse.
+     */
+    this.selection = configuration.selection;
+
+    /**
+     * @function GeneticAlgorithm#crossover
+     * @description Dada una poblacion realiza los necesarios procesos de cruce para generar los hijos de la poblacion actual.
+     *
+     * @return {Element[]} - Debe devolver los hijos resultado del proceso de cruce de una poblacion.
+     */
+    this.crossover = configuration.crossover;
+
+    /**
+     * @function GeneticAlgorithm#mutation
+     * @description Realiza el proceso de mutacion dada una poblacion.
+     *
+     * @return {Element[]} - Debe devolver los elementos de una poblacion tras haberse realizado el proceso de mutacion.
+     */
+    this.mutation = configuration.mutation;
+
+    /**
+     * @function GeneticAlgorithm#evolution
+     * @description Reemplaza la poblacion actual por la siguiente generacion.
+     *
+     * @return {Element[]} - Debe devolver la poblacion de la siguiente generacion.
+     */
+    this.evolution = configuration.evolution;
+
+    /**
+     * @function GeneticAlgorithm#initialize
+     * @description Crea una nueva poblacion
+     */
+    this.initialize = function () {
+        that.setPopulation(that.initialization(configuration.popSize, configuration.chromosomeSize, configuration.genes, configuration.repeated));
+    }
+
+    /**
+     * @function GeneticAlgorithm#simulateGeneration
+     * @description Simula el proceso que vive una generacion de elementos del algoritmo genetico. 
+     *   - Se inicializa una poblacion
+     *   - Se evaluan sus elementos con una función de fitness. 
+     *   - Una vez obtenidos los valores de fitness se procesa una función de selección para escoger que elementos se reproducirán.
+     *   - Se lleva a cabo el proceso de reproducción.
+     *   - Se lleva a cabo el proceso de mutación.
+     *   - Se calcula el mejor elemento de la población
+     *   - El numero de generación avanza
+     */
+    this.simulateGeneration = function () {
+        if (that.getPopulation().length == 0) {
+            console.log("No existen elementos en la poblacion, debe inicializarse primero");
+        } else {
+            that.setPopulation(that.evaluate(that.getPopulation())); // Se evaluan sus elementos
+            that.setParents(that.selection(that.getPopulation())); // Se utiliza la funcion de seleccion para elegir los elementos que se reproduciran
+            that.setChildren(that.crossover(that.getParents(), that.getPopulation(), configuration.percentCrossOver)); // Se crean los hijos como resultado del cruce de sus padres.
+            that.setPopulation(that.getChildren()); // Los hijos forman ahora la nueva poblacion 
+            that.setPopulation(that.mutation(that.getPopulation(), configuration.percentMutation, configuration.genes)); // Se lleva a cabo la mutacion
+            that.setPopulation(that.evolution(that.getPopulation())); // Se cambian los elementos de la poblacion con los obtenidos durante el algoritmo
+            that.setPopulation(that.evaluate(that.getPopulation())); // Se evaluan los nuevos elementos
+            that.setGeneration(that.getGeneration() + 1); // Aumenta el numero de generacion
+            that.setBest((that.bestElement(that.getPopulation()))); // Se establece el mejor elemento de la generacion
+        }
+    }
+
+    /**
+     * @function GeneticAlgorithm#simulateConditionalGeneration
+     * @description Simula generaciones del algoritmo genetico hasta llegar a la generacion limite
+     *
+     * @param {number} finalGeneration - Numero de generaciones que se simularan.
+     * 
+     * @return {Element} - El mejor elemento en el momento de alcanzar a la condicion de terminacion.
+     */
+    this.simulateConditionalGeneration = function (finalGeneration) {
+        while (that.getGeneration() &lt; finalGeneration) {
+            that.simulateGeneration();
+        }
+        return that.getBest();
+    }
+
+
+    /**
+     * @function GeneticAlgorithm#simulateConditionionalTime
+     * @description Simula generaciones del algoritmo genetico hasta llegar a un tiempo limite
+     *
+     * @param {number} finalTime - Tiempo en ms. Ninguna simulacion más comenzará trás haberse alcanzado este tiempo.   
+     * @return {Element} - El mejor elemento en el momento de alcanzar a la condicion de terminacion.
+     */
+    this.simulateConditionalTime = function (finalTime) {
+        var startT = new Date().getTime();
+        var finalT = new Date().getTime();
+        var tiempoSimulacion = 0;
+        while (tiempoSimulacion &lt; finalTime) {
+            that.simulateGeneration();
+            finalT = new Date().getTime();
+            tiempoSimulacion = finalT - startT;
+        }
+        return that.getBest();
+    }
+
+    /**
+     * @function GeneticAlgorithm#simulateConditionionalFitness
+     * @description Simula generaciones del algoritmo genetico hasta que el mejor elemento de la generacion alcance el valor de fitness deseado
+     *
+     * @param {number} finalFitness - Valor de fitness que se desea que alcance el mejor elemento de una generacion.   
+     * @return {Element} - El mejor elemento en el momento de alcanzar a la condicion de terminacion.
+     */
+    this.simulateConditionalFitness = function (finalFitness) {
+        that.simulateGeneration();
+        while (that.getBest().getFitness() &lt; finalFitness) {
+            that.simulateGeneration();
+        }
+        return that.getBest();
+    }
+
+    /********************************* Utils *********************************/
+
+    /**
+     * @function GeneticAlgorithm#printPopulation
+     * @description Devuelve un string con la poblacion actual en formato legible por un ser humano.
+     *
+     * @param {Element[]} population - Conjunto de elementos que forman una poblacion.
+     * @return {string} - Devuelve los elementos de @population en un string legible con sus caracteristicas.
+     */
+
+    this.printPopulation = function (population) {
+        var result = "";
+        for (var i = 0; i &lt; population.length; i++) {
+            result += population[i].write() + "\n";
+        }
+        return result;
+    }
+
+    /**
+     * @function GeneticAlgorithm#bestElement
+     * @description Devuelve el mejor elemento de una poblacion.
+     *
+     * @param {Element[]} populationWithFitness -  Una poblacion en la que cada elemento tenga asignado su valor de fitness.
+     * @return {Element} - Devuelve el elemento de populationWithFitness con mejor fitness.
+     */
+    this.bestElement = function (populationWithFitness) {
+        var best = Object;
+        var auxPopulation = [];
+
+        // Se busca el primer elemento valido
+        function firstValid(population) {
+            var first = Object;
+            var oneValid = false;
+            for (var i = 0; i &lt; population.length; i++) {
+                if (that.isValid(population[i])) {
+                    oneValid = true;
+                    first = that.cloneElement(population[i]);
+                    break;
+                }
+                if (!oneValid) {
+                    console.log("No existe ningun elemento valido en esta generacion");
+                }
+            }
+            return first;
+        }
+        auxPopulation = this.clonePopulation(populationWithFitness);
+        auxPopulation = this.evaluate(auxPopulation);
+        // Al comenzar a buscar, el mejor elemento es el primer elemento valido encontrado
+        best = this.cloneElement(firstValid(auxPopulation));
+        // Se recorre la poblacion buscando el mejor elemento
+        for (var i = 0; i &lt; auxPopulation.length; i++) {
+            if (this.isValid(auxPopulation[i]) &amp;&amp; auxPopulation[i].getFitness() > best.getFitness()) {
+                best = this.cloneElement(auxPopulation[i]);
+            }
+        }
+        return best;
+    }
+
+    /**
+     * @function GeneticAlgorithm#cloneElement.
+     * @description Clona un elemento y devuelve su copia.
+     *
+     * @param {Element} element - Una instancia de tipo Element, es decir, un elemento de la poblacion.
+     * @return {Element} La instancia copiada de @element.
+     */
+    this.cloneElement = function (element) {
+        var copy = new Element(element.getId(), element.getChromosome(), element.getFitness());
+        copy.setProbability(element.getProbability());
+        return copy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#clonePopulation.
+     * @description Clona una poblacion y devuelve la copia.
+     *
+     * @param {Element[]} population - Una poblacion de elementos de tipo Element.
+     * @return {Element[]} La copia de las instancias de cada elemento de @population.
+     */
+    this.clonePopulation = function (population) {
+        var copy = [];
+        for (var i = 0; i &lt; population.length; i++) {
+            copy[i] = this.cloneElement(population[i]);
+        }
+        return copy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#fitnessMean
+     * @description Calcula y devuelve la media de fitness de una poblacion.
+     *
+     * @param {Element[]} population - Una poblacion de elementos de tipo Element.
+     * @return {number} - El valor medio de los valores de fitness de los elementos de @population.
+     */
+    this.fitnessMean = function (population) {
+        var mean = 0;
+        for (var i = 0; i &lt; population.length; i++) {
+            mean += population[i].getFitness();
+        }
+        mean = mean / population.length;
+        return mean;
+    }
+
+
+    /*************************** Getters &amp; Setters **************************/
+
+    /**
+     * @function GeneticAlgorithm#getPopulation
+     *
+     * @return {Element[]} Devuelve una copia de la poblacion actual.
+     */
+    this.getPopulation = function () {
+        var populationCopy = this.clonePopulation(this.population);
+        return populationCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#getParents
+     *
+     * @return {Element[]} Devuelve una copia de los parents actuales.
+     */
+    this.getParents = function () {
+        var parentsCopy = this.clonePopulation(this.parents);
+        return parentsCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#getChildren
+     *
+     * @return {Element[]} Devuelve una copia de llos childrens actuales.
+     */
+    this.getChildren = function () {
+        var childrenCopy = this.clonePopulation(this.children);
+        return childrenCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#getBest
+     *
+     * @return {Element} Devuelve una copia del mejor elemento actual.
+     */
+    this.getBest = function () {
+        var bestCopy = this.cloneElement(this.best);
+        return bestCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#getGeneration
+     *
+     * @return {number} Devuelve la generacion actual.
+     */
+    this.getGeneration = function () {
+        return this.generation;
+    }
+
+    /**
+     * @function GeneticAlgorithm#setPopulation
+     * @description Hace una copia de la poblacion introducida como parametro y la establece como la poblacion actual.
+     *
+     * @param {Element[]} population - Una poblacion de elementos.
+     */
+    this.setPopulation = function (population) {
+        var populationCopy = this.clonePopulation(population);
+        this.population = populationCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#setParents
+     * @description Hace una copia de la poblacion introducida como parametro y la establece como los padres actuales
+     *
+     * @param {Element[]} parents - Una poblacion de elementos.
+     */
+    this.setParents = function (parents) {
+        var parentsCopy = this.clonePopulation(parents);
+        this.parents = parentsCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#setChildren
+     * @description Hace una copia de la poblacion introducida como parametro y la establece como los childrens actuales.
+     *
+     * @param {Element[]} children - Una poblacion de elementos.
+     */
+    this.setChildren = function (children) {
+        var childrenCopy = this.clonePopulation(children);
+        this.children = childrenCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#setBest
+     * @description Hace una copia del elemento introducido como parámetro y lo establece como mejor elemento actual.
+     *
+     * @param {Element} best - Una poblacion de elementos.
+     */
+    this.setBest = function (best) {
+        var bestCopy = this.cloneElement(best);
+        this.best = bestCopy;
+    }
+
+    /**
+     * @function GeneticAlgorithm#setGeneration
+     * @description Establece el valor de la generacion actual.
+     *
+     * @param {number} generation - Un valor numerico que represente el numero de generacion.
+     */
+    this.setGeneration = function (generation) {
+        this.generation = generation;
+    }
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Element.html">Element</a></li><li><a href="Functions.html">Functions</a></li><li><a href="GeneticAlgorithm.html">GeneticAlgorithm</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Wed Sep 30 2015 22:14:19 GMT+0200 (Hora de verano romance)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
